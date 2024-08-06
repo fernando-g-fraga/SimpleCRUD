@@ -20,15 +20,15 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type contato struct {
-	name   string
-	email  string
-	phone  string
-	status bool
-}
+// type contato struct {
+// 	name   string
+// 	email  string
+// 	phone  string
+// 	status bool
+// }
 
 func main() {
-
+	// Conecao do banco de dados
 	db := ConectarDB()
 	CreateTable(db)
 
@@ -37,27 +37,40 @@ func main() {
 		log.Fatal(err)
 	}
 
-	escolha := showmenu()
+	for {
+		//menu e escolha do usuário
+		showmenu()
+		var escolha int
+		fmt.Println("Digite a sua escolha: ")
+		fmt.Scan(&escolha)
 
-	switch escolha {
-	default:
-		os.Exit(1)
-	case 1:
-		rows := createRecord(db)
-		fmt.Println(rows)
-	case 2:
-		selectAll()
-	case 3:
-		selectOne()
-	case 4:
-		deleteRecord()
-	case 5:
-		os.Exit(1)
+		switch escolha {
+		default:
+			os.Exit(1)
+		case 1:
+			createRecord(db)
+		case 2:
+			selectAll(db)
+		case 3:
+			var id int
+			fmt.Println("Digite o código desejado: ")
+			fmt.Scan(&id)
+			selectOne(db, id)
+		case 4:
+			var id int
+			var hold string
+			fmt.Println("Digite o código desejado: ")
+			fmt.Scan(&id)
+			fmt.Printf("Deseja realmente seguir com a exclusão do id: %v ? y or n", id)
+			fmt.Scan(&hold)
+			deleteRecord(db, id)
+		case 5:
+			os.Exit(1)
+		}
 	}
-
 }
 
-func createRecord(db *pgx.Conn) pgx.Rows {
+func createRecord(db *pgx.Conn) {
 
 	var first string
 	var email string
@@ -73,20 +86,71 @@ func createRecord(db *pgx.Conn) pgx.Rows {
 
 	query := `INSERT INTO contato (name,email,phone,status)
 	VALUES ($1,$2,$3,$4) returning ID`
-	rows, err := db.Query(context.Background(), query, first, email, phone, status)
+	_, err := db.Query(context.Background(), query, first, email, phone, status)
 
 	if err != nil {
 		log.Fatal("Ocorreu um erro ao cadastrar o usuário ", err)
 	}
 
-	return rows
+	defer db.Close(context.Background())
 
 }
-func selectAll()    {}
-func selectOne()    {}
-func deleteRecord() {}
+func selectAll(db *pgx.Conn) {
+	query := "SELECT id,name,email,phone,status FROM contato"
+	rows, err := db.Query(context.Background(), query)
 
-func showmenu() int {
+	if err != nil {
+		log.Fatal("Ocorreu um erro ao consultar os dados ", err)
+	}
+
+	var id int
+	var name string
+	var email string
+	var phone string
+	var status bool
+
+	for rows.Next() {
+		err = rows.Scan(&id, &name, &email, &phone, &status)
+		if err != nil {
+			log.Fatal("Ocorreu um erro ao consultar os dados ", err)
+		}
+		fmt.Printf("ID: %v | Name: %v | Email: %v | Phone: %v | Status: %v \n", id, name, email, phone, status)
+	}
+
+	fmt.Println("Digite alguma tecla para retornar ao menu anterior.")
+	var hold string
+	fmt.Scan(&hold)
+
+	defer db.Close(context.Background())
+
+}
+func selectOne(db *pgx.Conn, id int) {
+
+	var name string
+	var email string
+	var phone string
+	var status bool
+
+	query := "SELECT name,email,phone,status FROM contato WHERE ID=$1"
+	db.QueryRow(context.Background(), query, id).Scan(&name, &email, &phone, &status)
+
+	fmt.Printf("ID: %v | Name: %v | Email: %v | Phone: %v | Status: %v \n", id, name, email, phone, status)
+
+}
+func deleteRecord(db *pgx.Conn, id int) {
+	query := "DELETE FROM contato WHERE id=$1"
+	_, err := db.Query(context.Background(), query, id)
+
+	if err != nil {
+		log.Fatal("Ocorreu um erro ao consultar os dados ", err)
+	} else {
+		fmt.Println("Registro excluído com sucesso!")
+	}
+
+}
+
+func showmenu() {
+	fmt.Println("\n -----------------------------------------------------------------")
 	fmt.Println("Boas vindas, este é um exemplo de CRUD usando Golang e Postgres!")
 	fmt.Println(`Selecione uma opção abaixo:
 	1 - Criar um novo registro
@@ -94,13 +158,6 @@ func showmenu() int {
 	3 - Selecionar um determinado registro
 	4 - Deletar um registro existente
 	0 - Sair da aplicacao`)
-
-	var escolha int
-
-	fmt.Scan(&escolha)
-
-	return escolha
-
 }
 
 func ConectarDB() *pgx.Conn {
