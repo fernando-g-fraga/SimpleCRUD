@@ -10,8 +10,16 @@ import (
 
 func main() {
 	//Conexao DB
-	postgreURL := "postgres://postgres:secret@localhost:5432/simpleCRUD?sslmode=disable"
-	db.InitDB(postgreURL)
+	const (
+		port     = 5432
+		host     = "localhost"
+		user     = "postgres"
+		password = "secret"
+		dbname   = "simpleCRUD"
+	)
+
+	// postgreURL := "postgres://postgres:secret@localhost:5432/simpleCRUD?sslmode=disable"
+	db.InitDB(port, host, user, password, dbname)
 
 	//captura escolha do usuario/inicia loop
 	for {

@@ -11,8 +11,9 @@ import (
 
 var db *sql.DB
 
-func InitDB(dataSourceName string) {
+func InitDB(port int, host, user, password, dbname string) {
 	var err error
+	dataSourceName := fmt.Sprintf("host=%s port=%v user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 	db, err = sql.Open("postgres", dataSourceName)
 	if err != nil {
 		log.Fatal(err)
