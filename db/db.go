@@ -60,3 +60,38 @@ func ListContacts() ([]models.Contact, error) {
 	return contatos, err
 
 }
+
+func ContatDetails(id int) (models.Contact, error) {
+	query := `SELECT * FROM contato WHERE ID=$1`
+	rows := db.QueryRow(query, id)
+
+	var name string
+	var email string
+	var phone string
+	var status bool
+
+	err := rows.Scan(&id, &name, &email, &phone, &status)
+	c1 := models.Contact{
+		ID:     id,
+		Name:   name,
+		Email:  email,
+		Phone:  phone,
+		Status: status,
+	}
+
+	return c1, err
+
+}
+
+func DeleteContact(id int) (sql.Result, error) {
+	query := `DELETE FROM contato WHERE ID=$1`
+
+	result, err := db.Exec(query, id)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	return result, err
+
+}

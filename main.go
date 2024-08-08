@@ -59,9 +59,27 @@ func main() {
 
 			}
 		case 3:
-			//Filtrar por ID
+			var id int
+			fmt.Println("Digite abaixo o ID do contato desejado: ")
+			fmt.Scan(&id)
+			contatos, err := db.ContatDetails(id)
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("ID: %v | Name: %v | Email: %v | Phone: %v | Status: %v \n", contatos.ID, contatos.Name, contatos.Email, contatos.Phone, contatos.Status)
+
 		case 4:
-			//Deletar um registro existente por ID
+			var id int
+			fmt.Println("Digite abaixo um ID para exclusão: ")
+			fmt.Scan(&id)
+			result, err := db.DeleteContact(id)
+
+			if err != nil {
+				fmt.Println("O Usuário foi excluído com sucesso!")
+				fmt.Println(result)
+			} else {
+				fmt.Println(result)
+			}
 		case 0:
 			//sair do aplicativo
 			os.Exit(1)
